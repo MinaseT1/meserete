@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Image Upload</title>
+</head>
+<body>
+    <h1>Debug Image Upload Process</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="testUpload()">Test Upload</button>
+    <div id="output"></div>
+
+    <script>
+        async function testUpload() {
+            const fileInput = document.getElementById('imageInput');
+            const output = document.getElementById('output');
+            
+            if (!fileInput.files[0]) {
+                output.innerHTML = 'Please select a file first';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            console.log('Selected file:', file);
+            
+            // Test the same process as registration form
+            try {
+                // Import the functions (this will work in the browser context)
+                const { ensureBucketExists, uploadImageToSupabase } = await import('/lib/storage-utils.ts');
+                
+                console.log('🪣 Checking bucket existence...');
+                const bucketReady = await ensureBucketExists();
+                console.log('🪣 Bucket ready result:', bucketReady);
+                
+                if (bucketReady) {
+                    console.log('⬆️ Starting image upload to Supabase...');
+                    const uploadResult = await uploadImageToSupabase(
+                        file,
+                        'member-photos',
+                        'profiles'
+                    );
+                    console.log('⬆️ Upload result:', uploadResult);
+                    
+                    if (uploadResult) {
+                        output.innerHTML = `✅ Upload successful! URL: ${uploadResult.url}`;
+                    } else {
+                        output.innerHTML = '❌ Upload failed';
+                    }
+                } else {
+                    output.innerHTML = '❌ Bucket not ready';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                output.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

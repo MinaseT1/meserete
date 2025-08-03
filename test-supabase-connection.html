@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Supabase Connection</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    
+    <div class="test-section">
+        <h3>1. Test Supabase Client Connection</h3>
+        <button onclick="testConnection()">Test Connection</button>
+        <div id="connectionResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Test Storage Bucket</h3>
+        <button onclick="testBucket()">Test Bucket</button>
+        <div id="bucketResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Test Image Upload</h3>
+        <input type="file" id="testImage" accept="image/*">
+        <button onclick="testImageUpload()">Upload Test Image</button>
+        <div id="uploadResult"></div>
+    </div>
+    
+    <script>
+        // Initialize Supabase client
+        const supabaseUrl = 'https://vuwuznamewreqexscesw.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1d3V6bmFtZXdyZXFleHNjZXN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMTIzNjcsImV4cCI6MjA2ODU4ODM2N30.RFA8bryyM82n6lymxXPrEyJwAVuO95xU6UcmQrdEWdY';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        async function testConnection() {
+            const resultDiv = document.getElementById('connectionResult');
+            resultDiv.innerHTML = 'Testing connection...';
+            
+            try {
+                // Test basic connection by trying to get user
+                const { data, error } = await supabase.auth.getUser();
+                
+                if (error && error.message !== 'Auth session missing!') {
+                    resultDiv.innerHTML = `<div class="error">❌ Connection failed: ${error.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="success">✅ Supabase connection successful!</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Connection error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testBucket() {
+            const resultDiv = document.getElementById('bucketResult');
+            resultDiv.innerHTML = 'Testing bucket access...';
+            
+            try {
+                // Try to list files in the bucket
+                const { data, error } = await supabase.storage
+                    .from('member-photos')
+                    .list('', { limit: 1 });
+                
+                if (error) {
+                    resultDiv.innerHTML = `<div class="error">❌ Bucket access failed: ${error.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="success">✅ Bucket accessible! Found ${data.length} items</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Bucket error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testImageUpload() {
+            const resultDiv = document.getElementById('uploadResult');
+            const fileInput = document.getElementById('testImage');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<div class="error">❌ Please select an image first</div>';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            resultDiv.innerHTML = 'Uploading image...';
+            
+            try {
+                // Generate unique filename
+                const fileExt = file.name.split('.').pop();
+                const fileName = `test-${Date.now()}.${fileExt}`;
+                const filePath = `test/${fileName}`;
+                
+                // Upload file
+                const { data, error } = await supabase.storage
+                    .from('member-photos')
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+                
+                if (error) {
+                    resultDiv.innerHTML = `<div class="error">❌ Upload failed: ${error.message}</div>`;
+                } else {
+                    // Get public URL
+                    const { data: urlData } = supabase.storage
+                        .from('member-photos')
+                        .getPublicUrl(filePath);
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Upload successful!<br>
+                            Path: ${data.path}<br>
+                            URL: <a href="${urlData.publicUrl}" target="_blank">${urlData.publicUrl}</a><br>
+                            <img src="${urlData.publicUrl}" style="max-width: 200px; margin-top: 10px;">
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Upload error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
