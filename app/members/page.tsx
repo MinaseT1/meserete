@@ -85,6 +85,7 @@ interface Member {
   maritalStatus?: string;
   numberOfChildren?: number;
   childrenAges?: number[];
+  childrenInfo?: { name: string; age: number }[];
   profession?: string;
   uniqueSkills?: string[];
   educationLevel?: string;
@@ -177,6 +178,23 @@ export default function MembersPage() {
         }
       }
     }
+
+    // Ensure childrenInfo is always an array
+    let childrenInfo: { name: string; age: number }[] = [];
+    if (member.childrenInfo) {
+      if (Array.isArray(member.childrenInfo)) {
+        childrenInfo = member.childrenInfo;
+      } else if (typeof member.childrenInfo === 'string') {
+        try {
+          childrenInfo = JSON.parse(member.childrenInfo);
+          if (!Array.isArray(childrenInfo)) {
+            childrenInfo = [];
+          }
+        } catch {
+          childrenInfo = [];
+        }
+      }
+    }
     
     setEditFormData({
       firstName: member.firstName,
@@ -192,6 +210,7 @@ export default function MembersPage() {
       dateOfBirth: member.dateOfBirth || '',
       numberOfChildren: member.numberOfChildren || 0,
       childrenAges: childrenAges,
+      childrenInfo: childrenInfo,
       profession: member.profession || '',
       uniqueSkills: member.uniqueSkills || [],
       educationLevel: member.educationLevel || '',
@@ -272,6 +291,39 @@ export default function MembersPage() {
     setEditFormData(prev => ({
       ...prev,
       childrenAges: newAges
+    }));
+  };
+
+  // New functions for childrenInfo
+  const addChild = () => {
+    const currentChildrenInfo = editFormData.childrenInfo || [];
+    setEditFormData(prev => ({
+      ...prev,
+      childrenInfo: [...currentChildrenInfo, { name: '', age: 0 }],
+      numberOfChildren: currentChildrenInfo.length + 1
+    }));
+  };
+
+  const removeChild = (index: number) => {
+    const currentChildrenInfo = editFormData.childrenInfo || [];
+    const newChildrenInfo = currentChildrenInfo.filter((_, i) => i !== index);
+    setEditFormData(prev => ({
+      ...prev,
+      childrenInfo: newChildrenInfo,
+      numberOfChildren: newChildrenInfo.length
+    }));
+  };
+
+  const handleChildInfoChange = (index: number, field: 'name' | 'age', value: string | number) => {
+    const currentChildrenInfo = editFormData.childrenInfo || [];
+    const newChildrenInfo = [...currentChildrenInfo];
+    newChildrenInfo[index] = {
+      ...newChildrenInfo[index],
+      [field]: value
+    };
+    setEditFormData(prev => ({
+      ...prev,
+      childrenInfo: newChildrenInfo
     }));
   };
 
@@ -778,25 +830,60 @@ export default function MembersPage() {
               
               {/* Children Information */}
               {selectedMember.maritalStatus && selectedMember.maritalStatus !== 'SINGLE' && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div>
                     <Label className="text-sm font-medium">Number of Children</Label>
                     <p className="text-sm text-muted-foreground">{selectedMember.numberOfChildren || 0}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium">Children Ages</Label>
-                    <p className="text-sm text-muted-foreground">
+                    <Label className="text-sm font-medium">Children Information</Label>
+                    <div className="text-sm text-muted-foreground">
                       {(() => {
                         try {
+                          // Try to get childrenInfo first (contains names and ages)
+                          let childrenInfo = selectedMember.childrenInfo;
+                          if (typeof childrenInfo === 'string') {
+                            childrenInfo = JSON.parse(childrenInfo);
+                          }
+                          
+                          if (childrenInfo && Array.isArray(childrenInfo) && childrenInfo.length > 0) {
+                            return (
+                              <div className="space-y-2">
+                                {childrenInfo.map((child, index) => (
+                                  <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                    <span className="font-medium">{child.name || `Child ${index + 1}`}</span>
+                                    <span className="text-muted-foreground">{child.age} years old</span>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          }
+                          
+                          // Fallback to childrenAges if childrenInfo is not available
                           const ages = typeof selectedMember.childrenAges === 'string' 
                             ? JSON.parse(selectedMember.childrenAges) 
                             : selectedMember.childrenAges;
-                          return ages && ages.length > 0 ? ages.join(', ') + ' years' : 'Not provided';
+                          
+                          if (ages && Array.isArray(ages) && ages.length > 0) {
+                            return (
+                              <div className="space-y-2">
+                                {ages.map((age, index) => (
+                                  <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                    <span className="font-medium">Child {index + 1}</span>
+                                    <span className="text-muted-foreground">{age} years old</span>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          }
+                          
+                          return 'Not provided';
                         } catch {
                           return 'Not provided';
                         }
-                      })()}
-                    </p>
+                      })()
+                    }
+                    </div>
                   </div>
                 </div>
               )}
@@ -1047,7 +1134,7 @@ export default function MembersPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={addChildAge}
+                    onClick={addChild}
                     className="flex items-center space-x-1"
                   >
                     <Plus className="h-3 w-3" />
@@ -1055,32 +1142,48 @@ export default function MembersPage() {
                   </Button>
                 </div>
                 
-                {editFormData.childrenAges && Array.isArray(editFormData.childrenAges) && editFormData.childrenAges.length > 0 ? (
+                {editFormData.childrenInfo && Array.isArray(editFormData.childrenInfo) && editFormData.childrenInfo.length > 0 ? (
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">
-                      Children Ages (Total: {editFormData.numberOfChildren || 0})
+                      Children (Total: {editFormData.numberOfChildren || 0})
                     </Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {editFormData.childrenAges.map((age, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <Input
-                            type="number"
-                            min="0"
-                            max="50"
-                            value={age}
-                            onChange={(e) => updateChildAge(index, parseInt(e.target.value) || 0)}
-                            placeholder="Age"
-                            className="flex-1"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeChildAge(index)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
+                    <div className="space-y-3">
+                      {editFormData.childrenInfo.map((child, index) => (
+                        <div key={index} className="space-y-2 p-3 border rounded-lg bg-white">
+                          <Label className="text-sm font-medium">Child {index + 1}</Label>
+                          <div className="flex items-center space-x-2">
+                            <div className="flex-1">
+                              <Label className="text-xs text-muted-foreground">Name</Label>
+                              <Input
+                                type="text"
+                                placeholder="Child's name"
+                                value={child.name || ''}
+                                onChange={(e) => handleChildInfoChange(index, 'name', e.target.value)}
+                                className="mt-1"
+                              />
+                            </div>
+                            <div className="w-24">
+                              <Label className="text-xs text-muted-foreground">Age</Label>
+                              <Input
+                                type="number"
+                                placeholder="Age"
+                                value={child.age || ''}
+                                onChange={(e) => handleChildInfoChange(index, 'age', parseInt(e.target.value) || 0)}
+                                className="mt-1"
+                                min="0"
+                                max="30"
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              onClick={() => removeChild(index)}
+                              size="sm"
+                              variant="destructive"
+                              className="mt-5"
+                            >
+                              Remove
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>

@@ -37,7 +37,7 @@ export default function LoginPage() {
     if (user) {
       // Store user info in localStorage (in a real app, use proper session management)
       localStorage.setItem("user", JSON.stringify(user));
-      router.push("/dashboard");
+      router.push("/members");
     } else {
       setError("Invalid username or password");
     }

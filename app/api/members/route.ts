@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { handlePrismaError } from '@/lib/prisma'
+import { generateMemberID } from '@/lib/id-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +20,7 @@ export async function POST(request: NextRequest) {
     const maritalStatus = formData.get('maritalStatus') as string
     const numberOfChildren = formData.get('numberOfChildren') as string
     const childrenAges = formData.get('childrenAges') as string
+    const childrenInfo = formData.get('childrenInfo') as string
     const profession = formData.get('profession') as string
     const uniqueSkills = formData.get('uniqueSkills') as string
     const educationLevel = formData.get('educationLevel') as string
@@ -28,33 +30,35 @@ export async function POST(request: NextRequest) {
     const profileImage = formData.get('profileImage') as string | null
 
     // Validate required fields
-    if (!firstName || !lastName || !email) {
+    if (!firstName || !lastName) {
       return NextResponse.json(
-        { error: 'First name, last name, and email are required fields' },
+        { error: 'First name and last name are required fields' },
         { status: 400 }
       )
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: 'Please provide a valid email address' },
-        { status: 400 }
-      )
-    }
+    // Validate email format if email is provided
+    if (email && email.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        return NextResponse.json(
+          { error: 'Please provide a valid email address' },
+          { status: 400 }
+        )
+      }
 
-    // Check if member with this email already exists
-    const existingMember = await prisma.member.findFirst({
-      where: { email }
-    })
+      // Check if member with this email already exists
+       const existingMember = await prisma.member.findFirst({
+         where: { email }
+       })
 
-    if (existingMember) {
-      return NextResponse.json(
-        { error: 'A member with this email address already exists' },
-        { status: 409 }
-      )
-    }
+       if (existingMember) {
+         return NextResponse.json(
+           { error: 'A member with this email address already exists' },
+           { status: 409 }
+         )
+       }
+     }
 
     // Handle profile image URL from Supabase storage
     let profileImageUrl = null
@@ -75,6 +79,7 @@ export async function POST(request: NextRequest) {
 
     // Parse JSON fields
     let parsedChildrenAges = null
+    let parsedChildrenInfo = null
     let parsedUniqueSkills = null
     
     try {
@@ -88,6 +93,16 @@ export async function POST(request: NextRequest) {
     }
     
     try {
+      if (childrenInfo) {
+        const childrenArray = JSON.parse(childrenInfo)
+        // Convert array to JSON string for database storage
+        parsedChildrenInfo = JSON.stringify(childrenArray)
+      }
+    } catch (e) {
+      console.warn('Failed to parse childrenInfo:', e)
+    }
+    
+    try {
       if (uniqueSkills) {
         const skillsArray = JSON.parse(uniqueSkills)
         // Convert array to JSON string for database storage
@@ -97,13 +112,23 @@ export async function POST(request: NextRequest) {
       console.warn('Failed to parse uniqueSkills:', e)
     }
 
-    // Create the new member directly
+    // Get existing member IDs to generate unique MKC ID
+    const existingMembers = await prisma.member.findMany({
+      select: { id: true }
+    });
+    const existingIds = existingMembers.map(member => member.id);
+    
+    // Generate custom MKC ID
+    const customId = generateMemberID(existingIds);
+
+    // Create the new member with custom ID
     const newMember = await prisma.member.create({
       data: {
+        id: customId,
         firstName,
         middleName: middleName || null,
         lastName,
-        email,
+        email: email && email.trim() !== '' ? email : null,
         phone: phone || null,
         subcity: subcity || null,
         kebele: kebele || null,
@@ -113,6 +138,7 @@ export async function POST(request: NextRequest) {
         maritalStatus: maritalStatus ? maritalStatus.toUpperCase() : null,
         numberOfChildren: numberOfChildren ? parseInt(numberOfChildren) : null,
         childrenAges: parsedChildrenAges,
+        // childrenInfo: parsedChildrenInfo, // Temporarily commented out until database migration
         profession: profession || null,
         uniqueSkills: parsedUniqueSkills,
         educationLevel: educationLevel ? educationLevel.toUpperCase() : null,
@@ -278,6 +304,10 @@ export async function PUT(request: NextRequest) {
       // Convert array to JSON string for database storage
       dataToUpdate.childrenAges = updateData.childrenAges ? JSON.stringify(updateData.childrenAges) : null
     }
+    // if (updateData.childrenInfo !== undefined) {
+    //   // Convert array to JSON string for database storage
+    //   dataToUpdate.childrenInfo = updateData.childrenInfo ? JSON.stringify(updateData.childrenInfo) : null
+    // } // Temporarily commented out until database migration
     if (updateData.profession !== undefined) dataToUpdate.profession = updateData.profession || null
     if (updateData.uniqueSkills !== undefined) {
       // Convert array to JSON string for database storage

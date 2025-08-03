@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, Plus, Search, Filter, MoreHorizontal, Users, Eye, Edit, UserPlus, X, Calendar, MapPin, Clock, FileText } from "lucide-react";
+import { Heart, Plus, Search, Filter, MoreHorizontal, Users, Eye, Edit, UserPlus, X, Calendar, MapPin, Clock, FileText, Trash2 } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -43,6 +43,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -94,7 +105,7 @@ export default function MinistriesPage() {
   // Modal states
   const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
   const [editMinistryOpen, setEditMinistryOpen] = useState(false);
-  const [manageParticipantsOpen, setManageParticipantsOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [selectedMinistry, setSelectedMinistry] = useState<Ministry | null>(null);
   
   // Edit form states
@@ -109,11 +120,7 @@ export default function MinistriesPage() {
     notes: ""
   });
   
-  // Participants management states
-  const [allMembers, setAllMembers] = useState<Member[]>([]);
-  const [ministryMembers, setMinistryMembers] = useState<Member[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(false);
-  const [memberSearchTerm, setMemberSearchTerm] = useState("");
+
 
   useEffect(() => {
     fetchMinistries();
@@ -158,32 +165,37 @@ export default function MinistriesPage() {
     setEditMinistryOpen(true);
   };
 
-  const handleManageParticipants = async (ministry: Ministry) => {
+  const handleManageParticipants = (ministry: Ministry) => {
+    router.push(`/ministries/participants?ministryId=${ministry.id}&ministryName=${encodeURIComponent(ministry.name)}`);
+  };
+
+  const handleDeleteMinistry = (ministry: Ministry) => {
     setSelectedMinistry(ministry);
-    setLoadingMembers(true);
-    setManageParticipantsOpen(true);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteMinistry = async () => {
+    if (!selectedMinistry) return;
     
     try {
-      // Fetch all members from the system
-      const allMembersResponse = await fetch('/api/members');
-      const allMembersData = await allMembersResponse.json();
+      const response = await fetch(`/api/ministries/${selectedMinistry.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
-      // Fetch members who are currently in this ministry
-      const ministryMembersResponse = await fetch(`/api/ministries/${ministry.id}/members`);
-      const ministryMembersData = await ministryMembersResponse.json();
+      const data = await response.json();
       
-      if (allMembersData.success && ministryMembersData.success) {
-        // Set all members for the dropdown/selection
-        setAllMembers(allMembersData.members);
-        // Set current ministry members
-        setMinistryMembers(ministryMembersData.members);
+      if (data.success) {
+        await fetchMinistries();
+        setDeleteConfirmOpen(false);
+        setSelectedMinistry(null);
       } else {
-        console.error('Failed to fetch data:', { allMembersData, ministryMembersData });
+        console.error('Failed to delete ministry:', data.error);
       }
     } catch (err) {
-      console.error('Error fetching members:', err);
-    } finally {
-      setLoadingMembers(false);
+      console.error('Error deleting ministry:', err);
     }
   };
 
@@ -215,45 +227,7 @@ export default function MinistriesPage() {
     }
   };
 
-  const handleToggleMemberParticipation = async (memberId: string, isCurrentlyInMinistry: boolean) => {
-    if (!selectedMinistry) return;
-    
-    try {
-      const endpoint = isCurrentlyInMinistry 
-        ? `/api/ministries/${selectedMinistry.id}/members/${memberId}`
-        : `/api/ministries/${selectedMinistry.id}/members`;
-      
-      const method = isCurrentlyInMinistry ? 'DELETE' : 'POST';
-      const body = isCurrentlyInMinistry ? undefined : JSON.stringify({ memberId });
-      
-      const response = await fetch(endpoint, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body,
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        // Refresh ministry members to update the UI
-        const ministryMembersResponse = await fetch(`/api/ministries/${selectedMinistry.id}/members`);
-        const ministryMembersData = await ministryMembersResponse.json();
-        
-        if (ministryMembersData.success) {
-          setMinistryMembers(ministryMembersData.members);
-        }
-        
-        // Refresh ministries to update counts
-        await fetchMinistries();
-      } else {
-        console.error('Failed to toggle member participation:', data.error);
-      }
-    } catch (err) {
-      console.error('Error toggling member participation:', err);
-    }
-  };
+
 
   const filteredMinistries = ministries.filter((ministry) => {
     const matchesSearch = ministry.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -467,12 +441,12 @@ export default function MinistriesPage() {
                                     <UserPlus className="mr-2 h-4 w-4" />
                                     Manage Participants
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
-                                    <Calendar className="mr-2 h-4 w-4" />
-                                    Schedule Meeting
-                                  </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem className="text-destructive">
+                                  <DropdownMenuItem 
+                                    className="text-destructive"
+                                    onClick={() => handleDeleteMinistry(ministry)}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
                                     Delete Ministry
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -714,136 +688,32 @@ export default function MinistriesPage() {
          </DialogContent>
         </Dialog>
 
-        {/* Manage Participants Modal */}
-        <Dialog open={manageParticipantsOpen} onOpenChange={setManageParticipantsOpen}>
-          <DialogContent className="max-w-[98vw] w-[98vw] h-[95vh] max-h-[95vh] overflow-hidden p-0">
-            <div className="p-6 flex flex-col h-full">
-              <DialogHeader className="mb-4">
-                <DialogTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Ministry Members - {selectedMinistry?.name}
-                </DialogTitle>
-                <DialogDescription>
-                  View and manage members in this ministry. Total members: {ministryMembers.length}
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="flex flex-col flex-1">
-              {/* Search Bar */}
-              <div className="mb-4">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search members..."
-                    value={memberSearchTerm}
-                    onChange={(e) => setMemberSearchTerm(e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
-              </div>
-              
-              {/* Members List */}
-              <div className="flex-1 overflow-auto border rounded-lg">
-                {loadingMembers ? (
-                  <div className="flex flex-col items-center justify-center h-32 space-y-2">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <p className="text-muted-foreground">Loading members...</p>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-background">
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Join Date</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {ministryMembers
-                        .filter(member => 
-                          member.firstName.toLowerCase().includes(memberSearchTerm.toLowerCase()) ||
-                          member.lastName.toLowerCase().includes(memberSearchTerm.toLowerCase()) ||
-                          member.email.toLowerCase().includes(memberSearchTerm.toLowerCase())
-                        )
-                        .map((member) => {
-                          return (
-                            <TableRow key={member.id}>
-                              <TableCell className="font-medium">
-                                {member.firstName} {member.lastName}
-                              </TableCell>
-                              <TableCell>{member.email}</TableCell>
-                              <TableCell>{member.phone || 'N/A'}</TableCell>
-                              <TableCell>
-                                <Badge variant={member.status === 'ACTIVE' ? "default" : "secondary"}>
-                                  {member.status === 'ACTIVE' ? "Active" : member.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                {member.joinDate ? (
-                                  <span className="text-sm text-muted-foreground">
-                                    {new Date(member.joinDate).toLocaleDateString()}
-                                  </span>
-                                ) : (
-                                  <span className="text-sm text-muted-foreground">N/A</span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <span className="text-sm">
-                                  {member.role || 'Member'}
-                                </span>
-                              </TableCell>
-                              <TableCell>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleToggleMemberParticipation(member.id, true)}
-                                  disabled={member.status !== 'ACTIVE'}
-                                >
-                                  Remove
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
-                      }
-                    </TableBody>
-                  </Table>
-                )}
-              </div>
-              
-              {/* Summary */}
-              <div className="mt-4 p-4 bg-muted rounded-lg">
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-6">
-                    <div>
-                      <span className="text-sm font-medium">Total Members:</span>
-                      <span className="ml-2 text-sm">{ministryMembers.length}</span>
-                    </div>
-                    <div>
-                      <span className="text-sm font-medium">Active Members:</span>
-                      <span className="ml-2 text-sm">{ministryMembers.filter(m => m.status === 'ACTIVE').length}</span>
-                    </div>
-                    {selectedMinistry?.capacity && (
-                      <div>
-                        <span className="text-sm font-medium">Capacity:</span>
-                        <span className="ml-2 text-sm">{selectedMinistry.capacity}</span>
-                      </div>
-                    )}
-                  </div>
-                  <Button variant="outline" onClick={() => setManageParticipantsOpen(false)}>
-                    <X className="mr-2 h-4 w-4" />
-                    Close
-                  </Button>
-                </div>
-              </div>
-            </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-destructive" />
+                Delete Ministry
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{selectedMinistry?.name}"? This action cannot be undone and will remove all associated data including members and meeting schedules.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteConfirmOpen(false)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmDeleteMinistry}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Ministry
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SidebarProvider>
     );
   }

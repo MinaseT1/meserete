@@ -140,6 +140,7 @@ export default function RegistrationPage() {
     // Children information
     numberOfChildren: 0,
     childrenAges: [] as number[],
+    childrenInfo: [] as { name: string; age: number }[],
     // Professional and education
     profession: "",
     uniqueSkills: [] as string[],
@@ -189,11 +190,28 @@ export default function RegistrationPage() {
     setFormData(prev => ({ ...prev, childrenAges: newAges }));
   };
 
+  const handleChildInfoChange = (index: number, field: 'name' | 'age', value: string | number) => {
+    const newChildrenInfo = [...formData.childrenInfo];
+    newChildrenInfo[index] = {
+      ...newChildrenInfo[index],
+      [field]: value
+    };
+    setFormData(prev => ({ ...prev, childrenInfo: newChildrenInfo }));
+  };
+
   const addChildAge = () => {
     setFormData(prev => ({
       ...prev,
       numberOfChildren: prev.numberOfChildren + 1,
       childrenAges: [...prev.childrenAges, 0]
+    }));
+  };
+
+  const addChild = () => {
+    setFormData(prev => ({
+      ...prev,
+      numberOfChildren: prev.numberOfChildren + 1,
+      childrenInfo: [...prev.childrenInfo, { name: '', age: 0 }]
     }));
   };
 
@@ -203,6 +221,15 @@ export default function RegistrationPage() {
       ...prev,
       numberOfChildren: Math.max(0, prev.numberOfChildren - 1),
       childrenAges: newAges
+    }));
+  };
+
+  const removeChild = (index: number) => {
+    const newChildrenInfo = formData.childrenInfo.filter((_, i) => i !== index);
+    setFormData(prev => ({
+      ...prev,
+      numberOfChildren: Math.max(0, prev.numberOfChildren - 1),
+      childrenInfo: newChildrenInfo
     }));
   };
 
@@ -365,7 +392,7 @@ export default function RegistrationPage() {
       
       // Add all form fields
       Object.entries(formData).forEach(([key, value]) => {
-        if (key === 'childrenAges' || key === 'uniqueSkills') {
+        if (key === 'childrenAges' || key === 'uniqueSkills' || key === 'childrenInfo') {
           submitData.append(key, JSON.stringify(value));
         } else if (key === 'profileImage') {
           // Send the Supabase URL instead of the file
@@ -409,6 +436,7 @@ export default function RegistrationPage() {
           // Children information
           numberOfChildren: 0,
           childrenAges: [],
+          childrenInfo: [],
           // Professional and education
           profession: "",
           uniqueSkills: [],
@@ -722,13 +750,12 @@ export default function RegistrationPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email *</Label>
+                      <Label htmlFor="email">Email</Label>
                       <Input
                         id="email"
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleInputChange("email", e.target.value)}
-                        required
                       />
                     </div>
                     <div className="space-y-2">
@@ -785,31 +812,46 @@ export default function RegistrationPage() {
                       <h4 className="text-md font-medium">Children Information</h4>
                       <div className="space-y-2">
                         <Label>Number of Children: {formData.numberOfChildren}</Label>
-                        <Button type="button" onClick={addChildAge} size="sm" variant="outline">
+                        <Button type="button" onClick={addChild} size="sm" variant="outline">
                           Add Child
                         </Button>
                       </div>
-                      {formData.childrenAges.map((age, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <Label className="w-20">Child {index + 1}:</Label>
-                          <Input
-                            type="number"
-                            placeholder="Age"
-                            value={age || ''}
-                            onChange={(e) => handleChildrenAgeChange(index, parseInt(e.target.value) || 0)}
-                            className="w-20"
-                            min="0"
-                            max="30"
-                          />
-                          <span className="text-sm text-muted-foreground">years old</span>
-                          <Button
-                            type="button"
-                            onClick={() => removeChildAge(index)}
-                            size="sm"
-                            variant="destructive"
-                          >
-                            Remove
-                          </Button>
+                      {formData.childrenInfo.map((child, index) => (
+                        <div key={index} className="space-y-2 p-3 border rounded-lg bg-white">
+                          <Label className="text-sm font-medium">Child {index + 1}</Label>
+                          <div className="flex items-center space-x-2">
+                            <div className="flex-1">
+                              <Label className="text-xs text-muted-foreground">Name</Label>
+                              <Input
+                                type="text"
+                                placeholder="Child's name"
+                                value={child.name || ''}
+                                onChange={(e) => handleChildInfoChange(index, 'name', e.target.value)}
+                                className="mt-1"
+                              />
+                            </div>
+                            <div className="w-24">
+                              <Label className="text-xs text-muted-foreground">Age</Label>
+                              <Input
+                                type="number"
+                                placeholder="Age"
+                                value={child.age || ''}
+                                onChange={(e) => handleChildInfoChange(index, 'age', parseInt(e.target.value) || 0)}
+                                className="mt-1"
+                                min="0"
+                                max="30"
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              onClick={() => removeChild(index)}
+                              size="sm"
+                              variant="destructive"
+                              className="mt-5"
+                            >
+                              Remove
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -924,8 +966,8 @@ export default function RegistrationPage() {
 
 
                     <div className="space-y-2">
-                      <Label htmlFor="ministry">Interested Ministry *</Label>
-                      <Select onValueChange={(value) => handleInputChange("ministry", value)} required>
+                      <Label htmlFor="ministry">Interested Ministry</Label>
+                      <Select onValueChange={(value) => handleInputChange("ministry", value)}>
                         <SelectTrigger>
                           <SelectValue placeholder={ministriesLoading ? "Loading ministries..." : ministries.length === 0 ? "No ministries available" : "Select ministry"} />
                         </SelectTrigger>

@@ -48,6 +48,7 @@ model Member {
   maritalStatus          MaritalStatus?
   numberOfChildren       Int?              @default(0)
   childrenAges           String?
+  childrenInfo           String?
   profession             String?           @db.VarChar(200)
   uniqueSkills           String?
   educationLevel         EducationLevel?

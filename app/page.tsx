@@ -10,7 +10,7 @@ export default function Home() {
     // Check if user is already logged in
     const userData = localStorage.getItem("user");
     if (userData) {
-      router.push("/dashboard");
+      router.push("/members");
     } else {
       router.push("/login");
     }
