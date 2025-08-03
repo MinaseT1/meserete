@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   try {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const today = new Date()
     
     // Get registration statistics in parallel
     const [
@@ -97,7 +98,7 @@ export async function GET() {
       stats
     })
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Error fetching registration stats:', error)
     
     return NextResponse.json(

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send, Mail, MessageSquare, Users, Phone, Calendar } from "lucide-react";
+import { Send, Mail, MessageSquare, Phone } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -12,7 +12,7 @@ import {
   Bell, 
   Plus,
   Search,
-  Filter,
+
   Eye,
   Edit,
   Trash2
@@ -57,12 +57,10 @@ import {
 } from "@/components/ui/table";
 
 // Communications will be loaded from database
-import { CommunicationService } from "@/lib/database"
-
 // Initialize empty arrays - data will come from database
-const announcements: any[] = [];
-const emailLists: any[] = [];
-const smsCampaigns: any[] = [];
+const announcements: Array<Record<string, unknown>> = [];
+const emailLists: Array<Record<string, unknown>> = [];
+const smsCampaigns: Array<Record<string, unknown>> = [];
 
 export default function CommunicationsPage() {
   const [isAnnouncementDialogOpen, setIsAnnouncementDialogOpen] = useState(false);

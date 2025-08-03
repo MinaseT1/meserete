@@ -52,7 +52,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       total: members.length
     })
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Error fetching ministry members:', error)
     
     return NextResponse.json(
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       message: 'Member added to ministry successfully'
     })
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Error adding member to ministry:', error)
     
     const errorResponse = handlePrismaError(error)

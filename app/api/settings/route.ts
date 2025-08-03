@@ -21,7 +21,7 @@ export async function GET() {
         id: setting.id
       }
       return acc
-    }, {} as Record<string, unknown>)
+    }, {} as Record<string, any>)
 
     return NextResponse.json({
       success: true,
@@ -29,7 +29,7 @@ export async function GET() {
       total: settings.length
     })
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Error fetching church settings:', error)
     
     return NextResponse.json(
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     // Process each setting
     for (const [key, data] of Object.entries(settings)) {
-      const settingData = data as Record<string, unknown>
+      const settingData = data as any
       
       const setting = await prisma.churchSettings.upsert({
         where: { key },
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       updatedCount: updatedSettings.length
     })
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Church settings update error:', error)
     
     const errorResponse = handlePrismaError(error)
@@ -135,7 +135,7 @@ export async function PUT(request: NextRequest) {
       message: 'Setting updated successfully'
     })
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Setting update error:', error)
     
     const errorResponse = handlePrismaError(error)
@@ -172,7 +172,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Setting deleted successfully'
     })
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Setting deletion error:', error)
     
     const errorResponse = handlePrismaError(error)

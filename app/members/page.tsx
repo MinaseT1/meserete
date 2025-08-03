@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Users, UserPlus, Search, Filter, MoreHorizontal, Mail, Phone, Loader2, Eye, Edit, Trash2, X, User, Upload, Plus, Minus } from "lucide-react";
+import { Users, UserPlus, Search, Filter, MoreHorizontal, Mail, Phone, Loader2, Eye, Edit, Trash2, X, User, Upload, Plus } from "lucide-react";
 import { createImagePreview, isValidImage, getFileSizeInMB } from "@/lib/image-utils";
 import { uploadImageToSupabase, ensureBucketExists } from "@/lib/storage-utils";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -91,7 +91,7 @@ interface Member {
   educationLevel?: string;
   profileImage?: string;
   ministryNames?: string;
-  ministries?: any[];
+  ministries?: Array<Record<string, unknown>>;
 }
 
 export default function MembersPage() {
@@ -136,7 +136,7 @@ export default function MembersPage() {
         if (ministriesData.success) {
           const ministries = ministriesData.ministries;
           setTotalMinistries(ministries.length);
-          setActiveMinistries(ministries.filter((m: any) => m.isActive).length);
+          setActiveMinistries(ministries.filter((m: Record<string, unknown>) => m.isActive).length);
         }
         
       } catch (err) {
@@ -1191,7 +1191,7 @@ export default function MembersPage() {
                 ) : (
                   <div className="text-center py-4 border-2 border-dashed border-gray-200 rounded-lg">
                     <p className="text-sm text-muted-foreground">
-                      No children added yet. Click "Add Child" to add children information.
+                      No children added yet. Click &quot;Add Child&quot; to add children information.
                     </p>
                   </div>
                 )}

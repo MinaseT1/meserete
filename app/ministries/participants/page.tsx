@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Search, Users, X, UserPlus, Eye, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, Search, Users, UserPlus, Eye, Edit, Trash2 } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import {

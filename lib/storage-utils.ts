@@ -91,15 +91,13 @@ export async function uploadImageToSupabase(
       
       data = regularResult.data;
       error = regularResult.error;
+      console.log('Upload result:', data);
     }
 
     if (error) {
       console.error('Error uploading file:', error);
       return null;
     }
-
-    // Use the data variable to avoid unused variable warning
-    console.log('Upload successful:', data);
 
     // Get public URL using regular client (this should work for public buckets)
     const { data: urlData } = supabase.storage

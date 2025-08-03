@@ -37,17 +37,15 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Ministry leaders will be loaded from database
-const ministryLeaders: any[] = [];
+const ministryLeaders: Array<Record<string, unknown>> = [];
 
 export default function MinistryLeadersPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
 
   const filteredLeaders = ministryLeaders.filter((leader) => {
-    const matchesSearch = leader.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         leader.ministry?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === "All" || leader.status === filterStatus;
-    return matchesSearch && matchesFilter;
+    const matchesSearch = leader.name?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         leader.ministry?.toString().toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
   });
 
   return (

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, Plus, Search, Filter, MoreHorizontal, Users, Eye, Edit, UserPlus, X, Calendar, MapPin, Clock, FileText, Trash2 } from "lucide-react";
+import { Heart, Plus, Search, Filter, MoreHorizontal, Users, Eye, Edit, UserPlus, Calendar, MapPin, FileText, Trash2 } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -63,8 +63,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-
 interface Ministry {
   id: string;
   name: string;
@@ -97,7 +95,6 @@ interface Member {
 export default function MinistriesPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -697,7 +694,7 @@ export default function MinistriesPage() {
                 Delete Ministry
               </AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{selectedMinistry?.name}"? This action cannot be undone and will remove all associated data including members and meeting schedules.
+                Are you sure you want to delete &quot;{selectedMinistry?.name}&quot;? This action cannot be undone and will remove all associated data including members and meeting schedules.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

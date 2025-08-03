@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // TypeScript errors have been fixed, no need to ignore them
 };
 
 export default nextConfig;

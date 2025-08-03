@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       message: 'Ministry registered successfully!'
     })
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Ministry registration error:', error)
     
     const errorResponse = handlePrismaError(error)
@@ -121,7 +121,7 @@ export async function GET() {
 
     // Extract leader information from notes
     const ministriesWithLeaders = ministries.map(ministry => {
-      const leaders: string[] = []
+      let leaders: string[] = []
       
       if (ministry.notes) {
         const lines = ministry.notes.split('\n')
@@ -147,7 +147,7 @@ export async function GET() {
       total: ministriesWithLeaders.length
     })
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('Error fetching ministries:', error)
     
     return NextResponse.json(
