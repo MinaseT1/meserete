@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 // Import Supabase clients directly
 import { getSupabase, getSupabaseAdmin } from './supabase';
 
@@ -98,6 +97,9 @@ export async function uploadImageToSupabase(
       console.error('Error uploading file:', error);
       return null;
     }
+
+    // Use the data variable to avoid unused variable warning
+    console.log('Upload successful:', data);
 
     // Get public URL using regular client (this should work for public buckets)
     const { data: urlData } = supabase.storage

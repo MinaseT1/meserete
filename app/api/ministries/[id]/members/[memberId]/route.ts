@@ -64,7 +64,7 @@ export async function DELETE(
       message: 'Member removed from ministry successfully'
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error removing member from ministry:', error)
     
     const errorResponse = handlePrismaError(error)
@@ -126,7 +126,7 @@ export async function GET(
       memberMinistry
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching member ministry details:', error)
     
     return NextResponse.json(

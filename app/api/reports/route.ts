@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
 
 export async function GET(request: Request) {
   try {
@@ -9,7 +7,7 @@ export async function GET(request: Request) {
     const type = searchParams.get('type') || 'membership'
     const period = searchParams.get('period') || '1month'
 
-    let data: any = {}
+    const data: Record<string, unknown> = {}
     
     // Calculate date range based on period
     const endDate = new Date()
@@ -300,23 +298,6 @@ async function getMinistryStats(startDate: Date, endDate: Date) {
   }
 }
 
-async function getAllReportsData(startDate: Date, endDate: Date) {
-  try {
-    const [membershipStats, ministryStats] = await Promise.all([
-      getMembershipStats(startDate, endDate),
-      getMinistryStats(startDate, endDate)
-    ]);
-
-    return {
-      membership: membershipStats,
-      ministry: ministryStats
-    };
-  } catch (error) {
-    console.error('Error in getAllReportsData:', error);
-    throw error;
-  }
-}
-
 function calculateAgeDistribution(members: { dateOfBirth: Date | null }[]) {
   const ageGroups = {
     '0-18': 0,
@@ -394,96 +375,4 @@ async function calculateMonthlyGrowth(startDate: Date, endDate: Date) {
   }
 
   return months;
-}
-
-// Sample data generators
-function generateMembershipData(period: string) {
-  const totalMembers = 255
-  const newMembers = period === '1month' ? 12 : period === '3months' ? 35 : period === '6months' ? 68 : 125
-  const activeRate = 87.3
-  const growthRate = ((newMembers / (totalMembers - newMembers)) * 100).toFixed(1)
-
-  return {
-    totalMembers,
-    newMembers,
-    activeRate,
-    growthRate: parseFloat(growthRate),
-    monthlyGrowth: [
-      { month: 'Jan', members: 180, newMembers: 8, retention: 96.2 },
-      { month: 'Feb', members: 195, newMembers: 15, retention: 97.1 },
-      { month: 'Mar', members: 210, newMembers: 15, retention: 96.5 },
-      { month: 'Apr', members: 225, newMembers: 15, retention: 97.3 },
-      { month: 'May', members: 240, newMembers: 15, retention: 96.8 },
-      { month: 'Jun', members: 255, newMembers: 15, retention: 97.2 }
-    ],
-    ageDistribution: [
-      { name: '18-25', value: 18, color: '#8884d8' },
-      { name: '26-35', value: 27, color: '#83a6ed' },
-      { name: '36-45', value: 28, color: '#8dd1e1' },
-      { name: '46-55', value: 16, color: '#82ca9d' },
-      { name: '56+', value: 11, color: '#a4de6c' }
-    ],
-    membershipByStatus: [
-      { status: 'Active', count: 223, percentage: 87.5 },
-      { status: 'Inactive', count: 22, percentage: 8.6 },
-      { status: 'New', count: 10, percentage: 3.9 }
-    ]
-  }
-}
-
-function generateGrowthData(period: string) {
-  const totalMembers = 255
-  const newMembersThisYear = 75
-  const growthRate = 8.5
-
-  return {
-    totalMembers,
-    newMembersThisYear,
-    growthRate,
-    monthlyGrowth: [
-      { month: 'Jan', members: 180, newMembers: 8, retention: 96.2 },
-      { month: 'Feb', members: 195, newMembers: 15, retention: 95.8 },
-      { month: 'Mar', members: 210, newMembers: 15, retention: 96.5 },
-      { month: 'Apr', members: 225, newMembers: 15, retention: 97.1 },
-      { month: 'May', members: 240, newMembers: 15, retention: 96.8 },
-      { month: 'Jun', members: 255, newMembers: 15, retention: 97.2 }
-    ],
-    growthTargets: [
-      { category: 'Total Membership', current: 255, target: 300, percentage: 85 },
-      { category: 'Youth Ministry', current: 45, target: 60, percentage: 75 },
-      { category: 'New Members', current: 75, target: 100, percentage: 75 },
-      { category: 'Active Participation', current: 223, target: 250, percentage: 89 }
-    ]
-  }
-}
-
-
-
-function generateMinistryData(period: string) {
-  return {
-    totalMinistries: 12,
-    activeMembers: 187,
-    participationRate: 73.3,
-    monthlyGrowth: 8.4,
-    ministryStats: [
-      { name: 'Worship Team', members: 25, leaders: 3, activities: 8, growth: 12.5 },
-      { name: 'Youth Ministry', members: 45, leaders: 5, activities: 12, growth: 15.2 },
-      { name: 'Children Ministry', members: 32, leaders: 4, activities: 10, growth: 8.7 },
-      { name: 'Outreach', members: 28, leaders: 3, activities: 6, growth: 22.1 },
-      { name: 'Prayer Team', members: 18, leaders: 2, activities: 4, growth: 5.8 },
-      { name: 'Media Team', members: 15, leaders: 2, activities: 8, growth: 33.3 }
-    ],
-    participationTrends: [
-      { month: 'Jan', participation: 165 },
-      { month: 'Feb', participation: 172 },
-      { month: 'Mar', participation: 180 },
-      { month: 'Apr', participation: 187 }
-    ],
-    leadershipData: [
-      { ministry: 'Worship Team', leaders: 3, members: 25, ratio: 8.3 },
-      { ministry: 'Youth Ministry', leaders: 5, members: 45, ratio: 9.0 },
-      { ministry: 'Children Ministry', leaders: 4, members: 32, ratio: 8.0 },
-      { ministry: 'Outreach', leaders: 3, members: 28, ratio: 9.3 }
-    ]
-  }
 }

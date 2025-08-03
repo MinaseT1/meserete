@@ -32,8 +32,8 @@ export interface PaginatedResult<T> {
 }
 
 export async function paginate<T>(
-  model: any,
-  options: PaginationOptions & { where?: any; include?: any } = {}
+  model: Record<string, unknown>,
+  options: PaginationOptions & { where?: Record<string, unknown>; include?: Record<string, unknown> } = {}
 ): Promise<PaginatedResult<T>> {
   const { page = 1, limit = 10, orderBy, where, include } = options
   const skip = (page - 1) * limit
@@ -98,7 +98,7 @@ export async function searchMembers(query: string, options: PaginationOptions = 
 
 // Bulk operations helper
 export async function bulkUpsert<T>(
-  model: any,
+  model: Record<string, unknown>,
   data: T[],
   uniqueFields: string[]
 ) {
@@ -107,11 +107,11 @@ export async function bulkUpsert<T>(
     
     for (const item of data) {
       const whereClause = uniqueFields.reduce((acc, field) => {
-        acc[field] = (item as any)[field]
+        acc[field] = (item as Record<string, unknown>)[field]
         return acc
-      }, {} as any)
+      }, {} as Record<string, unknown>)
 
-      const result = await (tx as any)[model.name].upsert({
+      const result = await (tx as Record<string, unknown>)[model.name as string].upsert({
         where: whereClause,
         update: item,
         create: item,
@@ -191,7 +191,7 @@ export async function getDatabaseStats() {
 }
 
 // Soft delete helper (for models that support it)
-export async function softDelete(model: any, id: string) {
+export async function softDelete(model: Record<string, unknown>, id: string) {
   return await model.update({
     where: { id },
     data: { 
@@ -202,7 +202,7 @@ export async function softDelete(model: any, id: string) {
 }
 
 // Restore soft deleted record
-export async function restoreSoftDeleted(model: any, id: string) {
+export async function restoreSoftDeleted(model: Record<string, unknown>, id: string) {
   return await model.update({
     where: { id },
     data: { 

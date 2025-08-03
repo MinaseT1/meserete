@@ -44,19 +44,10 @@ export async function GET() {
       stats
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching dashboard stats:', error)
-    
     return NextResponse.json(
-      { 
-        error: 'Failed to fetch dashboard statistics',
-        stats: {
-          totalMembers: 0,
-          totalMinistries: 0,
-          upcomingEvents: 0,
-          recentRegistrations: 0
-        }
-      },
+      { error: 'Failed to fetch dashboard statistics' },
       { status: 500 }
     )
   }

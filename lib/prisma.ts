@@ -19,7 +19,7 @@ export const prisma =
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
 // Helper function to handle database errors
-export const handlePrismaError = (error: any) => {
+export const handlePrismaError = (error: unknown) => {
   console.error('Database error:', error)
   
   // Unique constraint violation
