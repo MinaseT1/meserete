@@ -59,7 +59,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       message: 'Ministry updated successfully'
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Ministry update error:', error)
     
     const errorResponse = handlePrismaError(error)
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Extract leader information from notes
-    let leaders: string[] = []
+    const leaders: string[] = []
     
     if (ministry.notes) {
       const lines = ministry.notes.split('\n')
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       }
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching ministry:', error)
     
     return NextResponse.json(
@@ -154,7 +154,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       message: 'Ministry deleted successfully'
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Ministry deletion error:', error)
     
     const errorResponse = handlePrismaError(error)

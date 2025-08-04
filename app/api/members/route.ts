@@ -287,7 +287,26 @@ export async function PUT(request: NextRequest) {
     }
 
     // Prepare update data
-    const dataToUpdate: any = {}
+    const dataToUpdate: Partial<{
+      firstName: string;
+      middleName: string | null;
+      lastName: string;
+      email: string;
+      phone: string | null;
+      subcity: string | null;
+      kebele: string | null;
+      specialPlaceName: string | null;
+      numberOfChildren: number | null;
+      childrenAges: string | null;
+      profession: string | null;
+      uniqueSkills: string | null;
+      educationLevel: string | null;
+      profileImage: string | null;
+      dateOfBirth: Date | null;
+      gender: string | null;
+      maritalStatus: string | null;
+      membershipType: string | null;
+    }> = {}
     
     if (updateData.firstName) dataToUpdate.firstName = updateData.firstName
     if (updateData.middleName !== undefined) dataToUpdate.middleName = updateData.middleName || null

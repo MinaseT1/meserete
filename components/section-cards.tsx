@@ -1,11 +1,10 @@
 "use client"
 
-import { Users, UserPlus, TrendingUp } from "lucide-react"
+import { Users, UserPlus } from "lucide-react"
 
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"

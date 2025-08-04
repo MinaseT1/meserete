@@ -98,7 +98,7 @@ export async function GET() {
       stats
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching registration stats:', error)
     
     return NextResponse.json(

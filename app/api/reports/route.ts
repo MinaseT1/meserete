@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const type = searchParams.get('type') || 'membership'
     const period = searchParams.get('period') || '1month'
 
-    let data: any = {}
+    const data: Record<string, unknown> = {}
     
     // Calculate date range based on period
     const endDate = new Date()

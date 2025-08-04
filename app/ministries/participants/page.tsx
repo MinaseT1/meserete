@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Search, Users, UserPlus, Eye, Edit, Trash2 } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -65,7 +65,7 @@ interface Member {
   role?: string;
 }
 
-export default function ManageParticipantsPage() {
+function ManageParticipantsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ministryId = searchParams.get('ministryId');
@@ -375,5 +375,13 @@ export default function ManageParticipantsPage() {
         </div>
       </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+export default function ManageParticipantsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ManageParticipantsContent />
+    </Suspense>
   );
 }
